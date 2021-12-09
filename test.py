@@ -1,6 +1,7 @@
 import torch
 from torch.distributions import Categorical
 from torch import nn
+import numpy as np
 
 
 def test01():
@@ -70,5 +71,30 @@ def test_dim():
     print(torch.sum(y, dim=2))
 
 
+def test_index():
+    arr = [1, 2, 3, 4, 5]
+    arr.reverse()
+    print(arr)
+
+
+def test_arange():
+    batch_start = np.arange(0, 10, 3)
+    indices = np.arange(10, dtype=np.int64)
+    batches = [indices[i:i + 3] for i in batch_start]
+
+
+def test_bool():
+    print(1 - False)
+    print(1 - True)
+
+
+def test_unsq():
+    state = [0.01, 0.5, 0.9]
+    state = torch.tensor(state, dtype=torch.float32)
+    state = state.unsqueeze(0)
+    print(state)
+
+
+
 if __name__ == '__main__':
-    test_dim()
+    test_unsq()
