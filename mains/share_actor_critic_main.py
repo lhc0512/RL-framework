@@ -4,11 +4,11 @@ import torch
 import os
 import yaml
 from types import SimpleNamespace as SN
-from algorithms.share_actor_critic import ActorCriticAgent
+from algorithms.share_advantage_actor_critic import ActorCriticAgent
 from utils import plotLearning
 
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__), "../", "config", "share_actor_critic.yaml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "../", "config", "share_advantage_actor_critic.yaml"), "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:

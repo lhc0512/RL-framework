@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.actor_critic import ActorCriticAgent
+from algorithms.advantage_actor_critic import ActorCriticAgent
 from utils import plotLearning
 import os
 import yaml
@@ -11,7 +11,7 @@ from types import SimpleNamespace as SN
 
 
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__), "../", "config", "actor_critic.yaml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "../", "config", "advantage_actor_critic.yaml"), "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:

@@ -94,8 +94,8 @@ class ActorCriticAgent:
             returns = (returns - returns.mean()) / (returns.std() + 1e-6)
 
         logprobs, values = self.act(self.buffer.states, self.buffer.actions)
-        # advantage = returns - values.detach()
-        actor_loss = -(logprobs * returns).mean()
+        advantage = returns - values.detach()
+        actor_loss = -(logprobs * advantage).mean()
         critic_loss = F.mse_loss(values, returns)
 
         self.actor_optimizer.zero_grad()

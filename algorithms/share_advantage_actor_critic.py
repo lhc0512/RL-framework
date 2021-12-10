@@ -4,6 +4,10 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.distributions as distributions
 
+"""
+Share Advantage Actor Critic 
+"""
+
 
 class RolloutBuffer:
     def __init__(self, args):
@@ -74,7 +78,9 @@ class ActorCriticAgent:
         # ---------------------------------------------------------
 
         values, logprobs = self.act(self.buffer.states, self.buffer.actions)
+        # advantage
         advantage = returns - values.detach()
+
         actor_loss = -(logprobs * advantage).mean()
         # todo critic_loss
         # critic_loss = F.smooth_l1_loss(values, returns).mean()
