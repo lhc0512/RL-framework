@@ -1,0 +1,15 @@
+# environment
+env_name: 'CartPole-v1'
+max_episode: 500
+state_dim: None
+action_dim: None
+
+# algorithm
+hidden_dim: 128
+lr: 0.03
+gamma: 0.99
+normalize: True
+
+# log
+seed: 123
+test_episode_interval: 10

@@ -2,21 +2,25 @@ import gym
 import numpy as np
 import torch
 
-from reinforce import ReinforceAgent
+from actor_critic import ActorCriticAgent
 from utils import plotLearning
+import os
+import yaml
+from types import SimpleNamespace as SN
 
 
 class Arguments:
     def __init__(self):
         self.env_name = 'CartPole-v1'
-        self.file_id = '2020-12-06'
-        self.seed = 1234
+        self.seed = 0
         self.state_dim = None
         # todo 32 64 128
         self.hidden_dim = 128
         self.action_dim = None
-        self.lr = 0.001
-        self.max_episode = 300
+        # self.lr = 0.001
+        self.actor_lr = 0.01
+        self.critic_lr = 0.01
+        self.max_episode = 500
         self.gamma = 0.99
         self.test_episode_interval = 10
         self.normalize = True
@@ -34,16 +38,19 @@ if __name__ == '__main__':
     args.state_dim = train_env.observation_space.shape[0]
     args.action_dim = train_env.action_space.n
 
-    agent = ReinforceAgent(args)
+    agent = ActorCriticAgent(args)
     episode_reward_history = []
     for episode in range(1, args.max_episode + 1):
         state = train_env.reset()
         done = False
         episode_reward = 0
         while not done:
-            action, log_prob_action = agent.select_action(state)
+            action = agent.select_action(state)
             next_state, reward, done, info = train_env.step(action)
-            agent.buffer.put(reward, log_prob_action)
+            # buffer
+            agent.buffer.states.append(state)
+            agent.buffer.actions.append(action)
+            agent.buffer.rewards.append(reward)
             state = next_state
             episode_reward += reward
         episode_reward_history.append(episode_reward)

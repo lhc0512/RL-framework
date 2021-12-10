@@ -7,33 +7,23 @@ import torch.distributions as distributions
 
 class RolloutBuffer:
     def __init__(self, args):
+        self.states = []
+        self.actions = []
         self.rewards = []
-        self.logprobs = []
         self.args = args
 
-    def put(self, reward, logprob):
-        self.rewards.append(reward)
-        self.logprobs.append(logprob)
-
     def clear(self):
+        self.states.clear()
+        self.actions.clear()
         self.rewards.clear()
-        self.logprobs.clear()
 
 
 class Policy(nn.Module):
     def __init__(self, args):
         super(Policy, self).__init__()
         self.net = nn.Sequential(nn.Linear(args.state_dim, args.hidden_dim),
-                                 # todo Tanh
-                                 # nn.Tanh(),
-                                 nn.ReLU(),
-                                 # todo Dropout
-                                 # nn.Dropout(),
-                                 nn.Linear(args.hidden_dim, args.hidden_dim),
-                                 # nn.Tanh(),
                                  nn.ReLU(),
                                  nn.Linear(args.hidden_dim, args.hidden_dim),
-                                 # todo Hardswish
                                  nn.Hardswish(),
                                  nn.Linear(args.hidden_dim, args.action_dim))
 
@@ -48,29 +38,37 @@ class ReinforceAgent:
         self.optimizer = optim.Adam(self.policy.parameters(), lr=args.lr)
         self.buffer = RolloutBuffer(args)
 
+    @torch.no_grad()
     def select_action(self, state):
-        # 添加一维度
-        state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-        # gradient
+        state = torch.tensor(state, dtype=torch.float32)
         action_pred = self.policy(state)
         action_prob = F.softmax(action_pred, dim=-1)
         dist = distributions.Categorical(action_prob)
         action = dist.sample()
-        lob_prob_action = dist.log_prob(action)
-        return action.item(), lob_prob_action
+        return action.item()
+
+    def act(self, states, actions):
+        states = torch.tensor(states, dtype=torch.float32)
+        actions = torch.tensor(actions)
+
+        action_pred = self.policy(states)
+        action_prob = F.softmax(action_pred, dim=-1)
+        dist = distributions.Categorical(action_prob)
+        return dist.log_prob(actions)
 
     def train(self):
-        # reward to go
+        # returns
         returns = []
         return_ = 0
         for reward in reversed(self.buffer.rewards):
             return_ = reward + return_ * self.args.gamma
-            returns.insert(0, return_)
+            returns.append(return_)
+        returns.reverse()
         returns = torch.tensor(returns, dtype=torch.float32)
-        # normalization
         if self.args.normalize:
             returns = (returns - returns.mean()) / returns.std()
-        logprobs = torch.stack(self.buffer.logprobs).squeeze()
+
+        logprobs = self.act(self.buffer.states, self.buffer.actions)
         loss = - (returns * logprobs).sum()
         self.optimizer.zero_grad()
         loss.backward()
