@@ -1,14 +1,17 @@
 import gym
 import numpy as np
 import torch
+
+from algorithms.TD_AC import ActorCriticAgent
+from utils import plotLearning
 import os
 import yaml
 from types import SimpleNamespace as SN
-from algorithms.reinforce import ReinforceAgent
-from utils import plotLearning
+
+
 
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__), "../", "config", "reinforce.yaml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "../", "config", "TD_AC.yaml"), "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:
@@ -25,7 +28,7 @@ if __name__ == '__main__':
     args.state_dim = train_env.observation_space.shape[0]
     args.action_dim = train_env.action_space.n
 
-    agent = ReinforceAgent(args)
+    agent = ActorCriticAgent(args)
     episode_reward_history = []
     for episode in range(1, args.max_episode + 1):
         state = train_env.reset()
@@ -34,9 +37,12 @@ if __name__ == '__main__':
         while not done:
             action = agent.select_action(state)
             next_state, reward, done, info = train_env.step(action)
+            # buffer
             agent.buffer.states.append(state)
             agent.buffer.actions.append(action)
             agent.buffer.rewards.append(reward)
+            agent.buffer.next_states.append(next_state)
+            agent.buffer.masks.append(1-int(done))
             state = next_state
             episode_reward += reward
         episode_reward_history.append(episode_reward)
