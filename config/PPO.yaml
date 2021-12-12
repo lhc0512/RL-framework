@@ -1,21 +1,40 @@
 # environment
 env_name: 'CartPole-v1'
-max_episode: 500
+#env_name: 'LunarLander-v2'
+max_episode_step: 400
 state_dim: None
 action_dim: None
 
+
 # algorithm
+name: 'PPO'
 hidden_dim: 64
-actor_lr: 0.0005
-critic_lr: 0.001
+actor_lr: 0.0001
+critic_lr: 0.0001
 gamma: 0.99
-lambda_: 0.95
-normalize: False
+lambda_: 0.95  # could be 0.95~0.99
+
+standardize_rewards: False
 clip: 0.2
-K_epoch: 4
+K_epoch: 10
 batch_size: 64
-entropy_coef: 0.01
+
+# no use entropy
+entropy_coef: 0  # could be 0.00~0.10
+entropy_coef_decay: 0.99
+
+# no use l2 regularization
+l2_reg: 0
+
+clip_grad_norm: 40
 
 # log
-seed: 0
-test_episode_interval: 10
+seed: 123
+test_num: 4
+
+total_step: 100000
+train_step: 2048
+save_step: 100000
+test_step: 5000
+
+checkpoint_path: './model'

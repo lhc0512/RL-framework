@@ -2,7 +2,7 @@ import torch
 from torch.distributions import Categorical
 from torch import nn
 import numpy as np
-
+from datetime import datetime
 
 def test01():
     probs = torch.FloatTensor([0.05, 0.55, 0.85])
@@ -94,7 +94,10 @@ def test_unsq():
     state = state.unsqueeze(0)
     print(state)
 
+def test_time():
+    data_str = datetime.now()
 
+    print(data_str)
 
 if __name__ == '__main__':
-    test_unsq()
+    test_time()
