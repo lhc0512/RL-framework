@@ -1,0 +1,44 @@
+# environment
+#env_name: 'CartPole-v1'
+env_name: 'LunarLander-v2'
+max_episode_steps: 400
+state_dim: None
+action_dim: None
+
+
+# algorithm
+name: 'A3C'
+hidden_dim: 64
+actor_lr: 0.0001
+critic_lr: 0.0001
+gamma: 0.99
+lambda_: 0.95  # could be 0.95~0.99
+
+standardize_rewards: False
+clip: 0.2
+clip_grad_norm: 10
+K_epoch: 10
+batch_size: 64
+
+# entropy
+use_entropy: True
+entropy_coeffient: 0.001  # could be 0.00~0.10
+
+# value clipping
+use_clipped_value: False
+use_returns: True  # simple and better than td_target
+
+
+# N
+num_agents: 8
+
+# log
+seed: 123
+test_num: 4
+
+total_steps: 100000
+train_steps: 2048
+save_steps: 100000
+test_steps: 5000
+
+checkpoint_path: './model'

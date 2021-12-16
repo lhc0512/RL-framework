@@ -8,8 +8,9 @@ import os
 import yaml
 from types import SimpleNamespace as SN
 from datetime import datetime
+from multiprocessing import Pipe, Process
 
-with open(os.path.join(os.path.dirname(__file__), "../", "config", "PPO.yaml"), "r") as f:
+with open(os.path.join(os.path.dirname(__file__), "config", "PPO.yaml"), "r") as f:
     try:
         config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except yaml.YAMLError as exc:
@@ -44,13 +45,13 @@ if __name__ == '__main__':
 
     agent = ActorCriticAgent(args)
     episode_reward_history = []
-    current_step = 0
+    current_steps = 0
 
-    while current_step <= args.total_steps:
+    while current_steps < args.total_steps:
         state = train_env.reset()
         done = False
         while not done:
-            current_step += 1
+            current_steps += 1
             action = agent.select_action(state)
             next_state, reward, done, info = train_env.step(action)
             # buffer
@@ -62,14 +63,15 @@ if __name__ == '__main__':
 
             state = next_state
 
-            if current_step % args.train_steps == 0:
+            if current_steps % args.train_steps == 0:
                 agent.train()
-            if current_step % args.test_steps == 0:
+            if current_steps % args.test_steps == 0:
                 average_episode_reward = test_agent(test_env, agent)
                 episode_reward_history.append(average_episode_reward)
-                print(f'| step : {current_step:6} | Episode Reward: {average_episode_reward:5.1f} |')
-            if current_step % args.save_steps == 0:
-                agent.save(f'{args.checkpoint_path}/{args.seed}-{args.name}-{current_step}')
+                print(f'| step : {current_steps:6} | Episode Reward: {average_episode_reward:5.1f} |')
+            if current_steps % args.save_steps == 0:
+                agent.save(f'{args.checkpoint_path}/{args.seed}-{args.name}-{current_steps}')
+
 
     file_name = f'{args.seed}-{args.name}-{args.env_name}-{datetime.now()}.png'
     plotLearning(episode_reward_history, filename=file_name, window=25)

@@ -16,6 +16,7 @@ GPU
 class RolloutBuffer:
     def __init__(self, args):
         self.states = []
+        self.avail_actions = []
         self.actions = []
         self.rewards = []
         self.next_states = []
@@ -24,6 +25,7 @@ class RolloutBuffer:
 
     def clear(self):
         self.states.clear()
+        self.avail_actions.clear()
         self.actions.clear()
         self.rewards.clear()
         self.next_states.clear()
@@ -51,6 +53,7 @@ class Actor(nn.Module):
 
     def forward(self, state):
         action_pred = self.net(state)
+
         action_prob = F.softmax(action_pred, dim=-1)
         return action_prob
 
@@ -72,8 +75,9 @@ class Critic(nn.Module):
 class ActorCriticAgent:
     def __init__(self, args):
         self.args = args
-        self.actor = Actor(args)
-        self.critic = Critic(args)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.actor = Actor(args).to(self.device)
+        self.critic = Critic(args).to(self.device)
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=args.actor_lr)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=args.critic_lr)
         self.buffer = RolloutBuffer(args)
@@ -81,8 +85,9 @@ class ActorCriticAgent:
     # inference in generating data
     @torch.no_grad()
     def select_action(self, state):
-        state = torch.as_tensor(state, dtype=torch.float32)
+        state = torch.as_tensor(state, dtype=torch.float32).to(self.device)
         action_prob = self.actor(state)
+
         dist = distributions.Categorical(action_prob)
         action = dist.sample()
         return action.item()
@@ -90,8 +95,9 @@ class ActorCriticAgent:
     # test
     @torch.no_grad()
     def select_argmax_action(self, state):
-        state = torch.as_tensor(state, dtype=torch.float32)
+        state = torch.as_tensor(state, dtype=torch.float32).to(self.device)
         action_prob = self.actor(state)
+
         return torch.argmax(action_prob).item()
 
     # training
@@ -104,72 +110,80 @@ class ActorCriticAgent:
         return action_log_probs, action_entropy
 
     def train(self):
-        # entropy coefficient decay
-        self.args.entropy_coef *= self.args.entropy_coef_decay
-
         # tensor buffer
-        masks = torch.as_tensor(self.buffer.masks, dtype=torch.float32)
+        masks = torch.as_tensor(self.buffer.masks, dtype=torch.float32).to(self.device)
 
-        rewards = torch.as_tensor(self.buffer.rewards, dtype=torch.float32)
+        rewards = torch.as_tensor(self.buffer.rewards, dtype=torch.float32).to(self.device)
         # no work in CartPole-v1
         if self.args.standardize_rewards:
             rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-4)
 
-        states = torch.as_tensor(self.buffer.states, dtype=torch.float32)
-        next_states = torch.as_tensor(self.buffer.next_states, dtype=torch.float32)
-        actions = torch.as_tensor(self.buffer.actions, dtype=torch.int64)
+        returns = self.calculate_returns(rewards, masks)
+
+        states = torch.as_tensor(self.buffer.states, dtype=torch.float32).to(self.device)
+        next_states = torch.as_tensor(self.buffer.next_states, dtype=torch.float32).to(self.device)
+        actions = torch.as_tensor(self.buffer.actions, dtype=torch.int64).to(self.device)
 
         # GAE calculation
         with torch.no_grad():
-            state_values = self.critic(states).squeeze()
-            next_state_values = self.critic(next_states).squeeze()
-        advantages = self.calculate_GAE(rewards, state_values, next_state_values, masks)
+            old_state_values = self.critic(states).squeeze().to(self.device)
+            old_next_state_values = self.critic(next_states).squeeze().to(self.device)
+        advantages = self.calculate_GAE(rewards, old_state_values, old_next_state_values, masks).to(self.device)
 
-        td_target = advantages + state_values
-
+        # critic loss target
+        if self.args.use_returns:  # true
+            targets = returns
+        else:
+            targets = advantages + old_state_values
         # PPO
         with torch.no_grad():
             old_log_probs, _ = self.evaluate_action(states, actions)
 
         for i in range(self.args.K_epoch):
             batches = self.buffer.get_batches()
+            batches = torch.as_tensor(batches, dtype=torch.int64).to(self.device)
             for batch in batches:
                 new_log_probs, prob_entropy = self.evaluate_action(states[batch], actions[batch])
                 ratio = (new_log_probs - old_log_probs[batch]).exp()
                 surr1 = ratio * advantages[batch]
-                surr2 = torch.clamp(ratio, 1 - self.args.clip, 1 + self.args.clip) * advantages[batch]
-                actor_loss = - torch.min(surr1, surr2).mean() - self.args.entropy_coef * prob_entropy.mean()
-                # todo value clip
-                critic_loss = F.mse_loss(self.critic(states[batch]).squeeze(), td_target[batch])
-                for name, param in self.critic.named_parameters():
-                    if 'weight' in name:
-                        critic_loss += self.args.l2_reg * param.pow(2).sum()
+                surr2 = ratio.clamp(1 - self.args.clip, 1 + self.args.clip) * advantages[batch]
+                actor_loss = - torch.min(surr1, surr2).mean()
+
+                # entropy
+                if self.args.use_entropy:  # false
+                    actor_loss += - self.args.entropy_coeffient * prob_entropy.mean()
+
+                new_state_values = self.critic(states[batch]).squeeze()
+                # value clip
+                if self.args.use_clipped_value:  # false
+                    critic_loss1 = 0.5 * (old_state_values[batch] + torch.clamp(new_state_values - old_state_values[batch], - self.args.clip, self.args.clip) - targets[batch]) ** 2
+                    critic_loss2 = 0.5 * (new_state_values - targets[batch]) ** 2
+                    critic_loss = torch.max(critic_loss1, critic_loss2).mean()
+                else:
+                    critic_loss = F.mse_loss(new_state_values, targets[batch])
 
                 self.actor_optimizer.zero_grad()
                 self.critic_optimizer.zero_grad()
                 actor_loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.args.clip_grad_norm)
                 critic_loss.backward()
-                # torch.nn.utils.clip_grad_norm(self.critic.parameters(), self.args.clip_grad_norm)
+
+                # gradient clip
+                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.args.clip_grad_norm)
+                torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.args.clip_grad_norm)
+
                 self.actor_optimizer.step()
                 self.critic_optimizer.step()
         self.buffer.clear()
 
-    # def calculate_returns(self, rewards, masks):
-    #     returns = []
-    #     return_ = 0
-    #     for reward, mask in zip(reversed(rewards), reversed(masks)):
-    #         return_ = reward + self.args.gamma * return_ * mask
-    #         returns.append(return_)
-    #     returns.reverse()
-    #     returns = torch.as_tensor(returns, dtype=torch.float32)
-    #     return returns
-
-    # # todo n step returns
-    # def calculate_n_step_returns(self, rewards, masks, n_step):
-    #     returns = []
-    #     returns = torch.as_tensor(returns)
-    #     return returns
+    def calculate_returns(self, rewards, masks):
+        returns = []
+        return_ = 0
+        for reward, mask in zip(reversed(rewards), reversed(masks)):
+            return_ = reward + self.args.gamma * return_ * mask
+            returns.append(return_)
+        returns.reverse()
+        returns = torch.as_tensor(returns, dtype=torch.float32)
+        return returns
 
     def calculate_GAE(self, rewards, state_values, next_state_values, masks):
         advantage = 0
@@ -183,10 +197,10 @@ class ActorCriticAgent:
         advantages = torch.as_tensor(advantages, dtype=torch.float32)
         return advantages
 
-    def save(self, check_point_path):
-        torch.save(self.actor.state_dict(), check_point_path)
-        torch.save(self.critic.state_dict(), check_point_path)
+    def save(self, checkpoint_path):
+        torch.save(self.actor.state_dict(), f'{checkpoint_path}_actor.pth')
+        torch.save(self.critic.state_dict(), f'{checkpoint_path}_critic.pth')
 
     def load(self, checkpoint_path):
-        self.actor.load_state_dict(torch.load(checkpoint_path))
-        self.critic.load_state_dict(torch.load(checkpoint_path))
+        self.actor.load_state_dict(torch.load(f'{checkpoint_path}_actor.pth'))
+        self.critic.load_state_dict(torch.load(f'{checkpoint_path}_critic.pth'))

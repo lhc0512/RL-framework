@@ -1,7 +1,7 @@
 # environment
 env_name: 'CartPole-v1'
 #env_name: 'LunarLander-v2'
-max_episode_step: 400
+max_episode_steps: 400
 state_dim: None
 action_dim: None
 
@@ -16,25 +16,25 @@ lambda_: 0.95  # could be 0.95~0.99
 
 standardize_rewards: False
 clip: 0.2
+clip_grad_norm: 10
 K_epoch: 10
 batch_size: 64
 
-# no use entropy
-entropy_coef: 0  # could be 0.00~0.10
-entropy_coef_decay: 0.99
+# entropy
+use_entropy: True
+entropy_coeffient: 0.001  # could be 0.00~0.10
 
-# no use l2 regularization
-l2_reg: 0
-
-clip_grad_norm: 40
+# value clipping
+use_clipped_value: False
+use_returns: True  # simple and better than td_target
 
 # log
 seed: 123
 test_num: 4
 
-total_step: 100000
-train_step: 2048
-save_step: 100000
-test_step: 5000
+total_steps: 50000
+train_steps: 2048
+save_steps: 100000
+test_steps: 5000
 
 checkpoint_path: './model'

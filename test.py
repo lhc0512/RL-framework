@@ -4,6 +4,7 @@ from torch import nn
 import numpy as np
 from datetime import datetime
 
+
 def test01():
     probs = torch.FloatTensor([0.05, 0.55, 0.85])
     # probs = torch.FloatTensor([0.05, 0.05, 0.9])
@@ -94,10 +95,28 @@ def test_unsq():
     state = state.unsqueeze(0)
     print(state)
 
+
 def test_time():
     data_str = datetime.now()
 
     print(data_str)
 
+
+def test_gather():
+    t = torch.tensor([[1, 2],
+                      [3, 4]])
+
+    print(torch.gather(t, 0, torch.LongTensor([[0, 1]])))
+def test_001():
+    a = torch.Tensor([[1, 2],
+                      [3, 4]])
+
+    b = torch.gather(a, dim=-1, index=torch.LongTensor([[1],[1]]))
+
+    print('a = ', a)
+    print('b = ', b)
+
+
 if __name__ == '__main__':
-    test_time()
+    # test_001()
+    test_001()
