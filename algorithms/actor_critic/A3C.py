@@ -1,8 +1,6 @@
 """
-Reinforcement Learning (A3C) using Pytroch + multiprocessing.
-The most simple implementation for continuous action.
-
-View more on my Chinese tutorial page [莫烦Python](https://morvanzhou.github.io/).
+based on
+https://github.com/MorvanZhou/pytorch-A3C
 """
 
 import os
@@ -14,15 +12,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import matplotlib.pyplot as plt
-from types import SimpleNamespace as SN
-import yaml
+from datetime import datetime
 
 os.environ["OMP_NUM_THREADS"] = "1"
-
-UPDATE_GLOBAL_ITER = 5
-GAMMA = 0.9
-MAX_EP = 3000
-
 
 class RolloutBuffer:
     def __init__(self):
@@ -104,6 +96,7 @@ class WorkerAgent(mp.Process):
         self.critic = Critic(args)
         self.env = gym.make('CartPole-v1')
         self.buffer = RolloutBuffer()
+        self.args = args
 
     @torch.no_grad()
     def choose_action(self, state):
@@ -121,7 +114,7 @@ class WorkerAgent(mp.Process):
 
     def run(self):
         total_step = 1
-        while self.g_ep.value < MAX_EP:
+        while self.g_ep.value < self.args.max_episodes:
             state = self.env.reset()
             episode_reward = 0.
             while True:
@@ -130,13 +123,13 @@ class WorkerAgent(mp.Process):
                 episode_reward += reward
                 self.buffer.add(state, action, reward, next_state, (1 - int(done)))
                 # update global and assign to local net
-                if total_step % UPDATE_GLOBAL_ITER == 0 or done:
+                if total_step % self.args.update_steps == 0 or done:
                     # next state value
                     with torch.no_grad():
                         next_state_value = self.critic(torch.as_tensor(next_state, dtype=torch.float32)).detach().numpy() * (1 - int(done))
                     buffer_v_target = []
                     for reward in reversed(self.buffer.rewards):  # reverse buffer r
-                        next_state_value = reward + GAMMA * next_state_value
+                        next_state_value = reward + self.args.gamma * next_state_value
                         buffer_v_target.append(next_state_value)
                     buffer_v_target.reverse()
 
@@ -177,11 +170,7 @@ class WorkerAgent(mp.Process):
                             else:
                                 self.g_ep_r.value = self.g_ep_r.value * 0.9 + episode_reward * 0.1
                         self.res_queue.put(self.g_ep_r.value)
-                        print(
-                            self.name,
-                            "Ep:", self.g_ep.value,
-                            "| Ep_r: %.0f" % self.g_ep_r.value,
-                        )
+                        print(f'episode: {self.g_ep.value} | reward: {self.g_ep_r.value}')
                         break
                 state = next_state
                 total_step += 1
@@ -234,6 +223,8 @@ class MasterAgent:
             worker.join()
 
         plt.plot(rewards)
-        plt.ylabel('Moving average ep reward')
-        plt.xlabel('Step')
-        plt.show()
+        plt.ylabel('reward')
+        plt.xlabel('step')
+        file_name = f'{self.args.seed}-{self.args.name}-{self.args.env_name}-{datetime.now()}.png'
+        plt.savefig(f"{file_name}", format="png")
+        plt.close()

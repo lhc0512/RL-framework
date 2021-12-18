@@ -16,10 +16,8 @@ gamma: 0.99
 lambda_: 0.95  # could be 0.95~0.99
 
 #  A3C
-agent_num: 3
-max_episode: 20000
-update_steps: 50
-
+max_episodes: 3000
+update_steps: 5
 
 
 standardize_rewards: False
