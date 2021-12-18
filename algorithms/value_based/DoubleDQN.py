@@ -5,6 +5,10 @@ import torch.optim as optim
 import numpy as np
 import copy
 
+"""
+Hado van Hasselt, Arthur Guez, David Silver:
+Deep Reinforcement Learning with Double Q-Learning. AAAI 2016: 2094-2100
+"""
 
 class ReplayBuffer:
     def __init__(self, args):

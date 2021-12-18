@@ -5,6 +5,11 @@ import torch.optim as optim
 import numpy as np
 import copy
 
+"""
+Ziyu Wang, Tom Schaul, Matteo Hessel, Hado van Hasselt, Marc Lanctot, Nando de Freitas:
+Dueling Network Architectures for Deep Reinforcement Learning. ICML 2016: 1995-2003
+"""
+
 
 class ReplayBuffer:
     def __init__(self, args):
@@ -52,14 +57,15 @@ class DuelingDoubleDQN(nn.Module):
         x = self.net(state)
         value = self.value(x)
         advantage = self.advantage(x)
-        return value, advantage
+        q_value = torch.add(value, advantage - advantage.mean(-1, keepdim=True))
+        return q_value
 
 
 class DuelingDoubleDQNAgent:
     def __init__(self, args):
-        self.Q_net = DuelingDoubleDQN(args)
-        self.Q_target = copy.deepcopy(self.Q_net)
-        self.optimizer = optim.Adam(self.Q_net.parameters(), lr=args.lr)
+        self.q_net = DuelingDoubleDQN(args)
+        self.q_target = copy.deepcopy(self.q_net)
+        self.optimizer = optim.Adam(self.q_net.parameters(), lr=args.lr)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.buffer = ReplayBuffer(args)
         self.args = args
@@ -68,7 +74,7 @@ class DuelingDoubleDQNAgent:
     def select_action(self, state):
         if np.random.random() > self.args.epsilon:
             state = torch.as_tensor(state, dtype=torch.float32).reshape(1, -1).to(self.device)
-            action = torch.argmax(self.Q_net(state)[1]).item()
+            action = torch.argmax(self.q_net(state)).item()
         else:
             action = np.random.randint(0, self.args.action_dim)
         return action
@@ -77,37 +83,31 @@ class DuelingDoubleDQNAgent:
     @torch.no_grad()
     def select_argmax_action(self, state):
         state = torch.as_tensor(state, dtype=torch.float32).reshape(1, -1).to(self.device)
-        return torch.argmax(self.Q_net(state)[1]).item()
+        return torch.argmax(self.q_net(state)).item()
 
     def train(self):
         if self.buffer.size < self.args.batch_size:
             return
         states, actions, rewards, next_states, masks = self.buffer.sample()
         with torch.no_grad():
-            next_Vs, next_As = self.Q_net(next_states)
-            next_Qs = torch.add(next_Vs, next_As - next_As.mean(-1, keepdim=True))
-            argmax_actions = next_Qs.argmax(-1).unsqueeze(-1)
+            # double DQN
+            argmax_actions = self.q_net(next_states).argmax(-1).unsqueeze(-1)
+            y_i = rewards + self.args.gamma * self.q_target(next_states).gather(-1, argmax_actions) * masks
 
-            next_Vs, next_As = self.Q_target(next_states)
-            next_Qs = torch.add(next_Vs, next_As - next_As.mean(-1, keepdim=True))
-
-            y_i = rewards + self.args.gamma * next_Qs.gather(-1, argmax_actions) * masks
-
-        Vs, As = self.Q_net(states)
-        Qs = torch.add(Vs, As - As.mean(-1, keepdim=True))
-        Qs = Qs.gather(-1, actions)
-        loss = F.mse_loss(y_i, Qs)
+        q_values = self.q_net(states)
+        q_values = q_values.gather(-1, actions)
+        loss = F.mse_loss(y_i, q_values)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         # todo soft update & hard update
-        for param, target_param in zip(self.Q_net.parameters(), self.Q_target.parameters()):
+        for param, target_param in zip(self.q_net.parameters(), self.q_target.parameters()):
             target_param.data.copy_(self.args.tau * param.data + (1 - self.args.tau) * target_param.data)
         # todo epsilon update
         self.args.epsilon = self.args.epsilon * self.args.epsilon_decay if self.args.epsilon > self.args.epsilon_mini else self.args.epsilon_mini
 
     def save(self, checkpoint_path):
-        torch.save(self.Q_net.state_dict(), f'{checkpoint_path}.pth')
+        torch.save(self.q_net.state_dict(), f'{checkpoint_path}.pth')
 
     def load(self, checkpoint_path):
-        self.Q_net.load_state_dict(torch.load(f'{checkpoint_path}.pth'))
+        self.q_net.load_state_dict(torch.load(f'{checkpoint_path}.pth'))

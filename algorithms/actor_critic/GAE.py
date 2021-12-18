@@ -5,7 +5,8 @@ import torch.nn.functional as F
 import torch.distributions as distributions
 
 """
-Advantage Actor Critic (A2C)
+John Schulman, Philipp Moritz, Sergey Levine, Michael I. Jordan, Pieter Abbeel:
+High-Dimensional Continuous Control Using Generalized Advantage Estimation. ICLR (Poster) 2016
 """
 
 

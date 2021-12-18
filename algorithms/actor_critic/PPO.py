@@ -6,10 +6,8 @@ import torch.distributions as distributions
 import numpy as np
 
 """
-todo list:
-vec env
-distributed
-GPU
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov:
+Proximal Policy Optimization Algorithms. CoRR abs/1707.06347 (2017)
 """
 
 

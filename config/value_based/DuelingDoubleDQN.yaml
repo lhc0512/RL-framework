@@ -7,11 +7,11 @@ env_name: 'CartPole-v1'
 
 
 name: 'DuelingDoubleDQN'
+lr: 0.001  # learning rate
+gamma: 0.99  # discount factor
+tau: 0.005  # soft target network update
+hidden_dim: 64  # hidden layer dimension
 
-lr: 0.001
-gamma: 0.99
-tau: 0.005
-hidden_dim: 64
 # experience replay
 buffer_size: 100000
 batch_size: 512
@@ -28,7 +28,7 @@ seed: 123
 
 total_steps: 100000
 save_steps: 100000
-test_steps: 5000
+test_steps: 2000
 test_num: 4
 
 checkpoint_path: './model'

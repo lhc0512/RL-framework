@@ -7,7 +7,7 @@ import os
 import yaml
 from types import SimpleNamespace as SN
 from datetime import datetime
-from utils import plot_figure
+from commons.utils import plot_figure
 
 with open(os.path.join(os.path.dirname(__file__), "config", "PPO.yaml"), "r") as f:
     try:

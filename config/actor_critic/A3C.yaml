@@ -1,18 +1,26 @@
 # environment
-#env_name: 'CartPole-v1'
-env_name: 'LunarLander-v2'
+env_name: 'CartPole-v1'
+#env_name: 'LunarLander-v2'
 max_episode_steps: 400
-state_dim: None
-action_dim: None
+#state_dim: None
+#action_dim: None
 
 
 # algorithm
 name: 'A3C'
-hidden_dim: 64
+hidden_dim: 128
 actor_lr: 0.0001
 critic_lr: 0.0001
+lr: 0.0001
 gamma: 0.99
 lambda_: 0.95  # could be 0.95~0.99
+
+#  A3C
+agent_num: 3
+max_episode: 20000
+update_steps: 50
+
+
 
 standardize_rewards: False
 clip: 0.2

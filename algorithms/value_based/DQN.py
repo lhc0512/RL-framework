@@ -5,6 +5,10 @@ import torch.optim as optim
 import numpy as np
 import copy
 
+"""
+Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Andrei A. Rusu, Joel Veness, Marc G. Bellemare, Alex Graves, Martin A. Riedmiller, Andreas Fidjeland, Georg Ostrovski, Stig Petersen, Charles Beattie, Amir Sadik, Ioannis Antonoglou, Helen King, Dharshan Kumaran, Daan Wierstra, Shane Legg, Demis Hassabis:
+Human-level control through deep reinforcement learning. Nat. 518(7540): 529-533 (2015)
+"""
 
 class ReplayBuffer:
     def __init__(self, args):
