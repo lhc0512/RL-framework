@@ -107,11 +107,13 @@ def test_gather():
                       [3, 4]])
 
     print(torch.gather(t, 0, torch.LongTensor([[0, 1]])))
+
+
 def test_001():
     a = torch.Tensor([[1, 2],
                       [3, 4]])
 
-    b = torch.gather(a, dim=-1, index=torch.LongTensor([[1],[1]]))
+    b = torch.gather(a, dim=-1, index=torch.LongTensor([[1], [1]]))
 
     print('a = ', a)
     print('b = ', b)

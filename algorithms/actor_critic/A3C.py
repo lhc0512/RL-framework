@@ -1,6 +1,11 @@
 """
 based on
 https://github.com/MorvanZhou/pytorch-A3C
+
+Volodymyr Mnih, Adrià Puigdomènech Badia, Mehdi Mirza, Alex Graves, Timothy P. Lillicrap, Tim Harley, David Silver, Koray Kavukcuoglu:
+Asynchronous Methods for Deep Reinforcement Learning. ICML 2016: 1928-1937
+
+Asynchronous Advantage Actor Critic (A3C)
 """
 
 import os
@@ -87,7 +92,7 @@ class WorkerAgent(mp.Process):
     def __init__(self, args, global_actor, global_critic, global_actor_optimizer, global_critic_optimizer, global_ep, global_ep_r, res_queue, name):
         super(WorkerAgent, self).__init__()
         self.name = f'worker-{name}'
-        self.g_ep, self.g_ep_r, self.res_queue = global_ep, global_ep_r, res_queue
+        self.global_episode, self.global_episode_reward, self.res_queue = global_ep, global_ep_r, res_queue
         self.global_actor = global_actor
         self.global_critic = global_critic
         self.global_actor_optimizer = global_actor_optimizer
@@ -107,14 +112,13 @@ class WorkerAgent(mp.Process):
 
     def evaluate_action(self, states, actions):
         probs = self.actor(states)
-        values = self.critic(states)
         dist = Categorical(probs)
         logprobs = dist.log_prob(actions)
-        return logprobs, values
+        return logprobs
 
     def run(self):
         total_step = 1
-        while self.g_ep.value < self.args.max_episodes:
+        while self.global_episode.value < self.args.max_episodes:
             state = self.env.reset()
             episode_reward = 0.
             while True:
@@ -137,24 +141,28 @@ class WorkerAgent(mp.Process):
                     states = torch.as_tensor(self.buffer.states, dtype=torch.float32)
                     actions = torch.as_tensor(self.buffer.actions, dtype=torch.int32)
 
-                    logprobs, values = self.evaluate_action(states, actions)
-
+                    logprobs = self.evaluate_action(states, actions)
+                    values = self.critic(states)
+                    # todo warning: 1 element vs 1 element array []
                     critic_loss = F.mse_loss(v_target, values)
                     actor_loss = (-logprobs * (v_target - values).detach()).mean()
-
-                    loss = critic_loss + actor_loss
-
+                    # !!!!
+                    # actor_loss.backward()
+                    # critic_loss.backward()
                     # calculate local gradients and push local parameters to global
                     self.global_actor_optimizer.zero_grad()
                     self.global_critic_optimizer.zero_grad()
-                    loss.backward()
-                    # fix bug 4 hours
-                    for lp1, gp1 in zip(self.actor.parameters(), self.global_actor.parameters()):
-                        gp1._grad = lp1.grad
-                    for lp, gp in zip(self.critic.parameters(), self.global_critic.parameters()):
-                        gp._grad = lp.grad
+                    # zero_grad -> backward -> step
+                    # todo  5 hours !!!!
+                    actor_loss.backward()
+                    critic_loss.backward()
+                    for actor_param, global_actor_param in zip(self.actor.parameters(), self.global_actor.parameters()):
+                        global_actor_param.grad = actor_param.grad
+                    for critic_param, global_critic_param in zip(self.critic.parameters(), self.global_critic.parameters()):
+                        global_critic_param.grad = critic_param.grad
                     self.global_actor_optimizer.step()
                     self.global_critic_optimizer.step()
+
                     # pull global parameters
                     self.actor.load_state_dict(self.global_actor.state_dict())
                     self.critic.load_state_dict(self.global_critic.state_dict())
@@ -162,15 +170,15 @@ class WorkerAgent(mp.Process):
 
                     # done and print information
                     if done:
-                        with self.g_ep.get_lock():
-                            self.g_ep.value += 1
-                        with self.g_ep_r.get_lock():
-                            if self.g_ep_r.value == 0.:
-                                self.g_ep_r.value = episode_reward
+                        with self.global_episode.get_lock():
+                            self.global_episode.value += 1
+                        with self.global_episode_reward.get_lock():
+                            if self.global_episode_reward.value == 0.:
+                                self.global_episode_reward.value = episode_reward
                             else:
-                                self.g_ep_r.value = self.g_ep_r.value * 0.9 + episode_reward * 0.1
-                        self.res_queue.put(self.g_ep_r.value)
-                        print(f'episode: {self.g_ep.value} | reward: {self.g_ep_r.value}')
+                                self.global_episode_reward.value = self.global_episode_reward.value * 0.9 + episode_reward * 0.1
+                        self.res_queue.put(self.global_episode_reward.value)
+                        print(f'episode: {self.global_episode.value} | reward: {self.global_episode_reward.value}')
                         break
                 state = next_state
                 total_step += 1
@@ -226,5 +234,5 @@ class MasterAgent:
         plt.ylabel('reward')
         plt.xlabel('step')
         file_name = f'{self.args.seed}-{self.args.name}-{self.args.env_name}-{datetime.now()}.png'
-        plt.savefig(f"{file_name}", format="png")
+        plt.savefig(file_name, format="png")
         plt.close()

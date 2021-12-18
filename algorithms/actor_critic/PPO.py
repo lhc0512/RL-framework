@@ -8,6 +8,9 @@ import numpy as np
 """
 John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov:
 Proximal Policy Optimization Algorithms. CoRR abs/1707.06347 (2017)
+
+
+Proximal Policy Optimization (PPO)
 """
 
 

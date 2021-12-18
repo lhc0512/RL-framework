@@ -16,7 +16,7 @@ gamma: 0.99
 lambda_: 0.95  # could be 0.95~0.99
 
 #  A3C
-max_episodes: 3000
+max_episodes: 2000
 update_steps: 5
 
 

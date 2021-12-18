@@ -2,16 +2,14 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.TD_AC import ActorCriticAgent
+from algorithms.AC import ActorCriticAgent
 from utils import plotLearning
 import os
 import yaml
 from types import SimpleNamespace as SN
 
-
-
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__), "../", "config", "TD_AC.yaml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "../", "config", "AC.yaml"), "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:
@@ -41,13 +39,11 @@ if __name__ == '__main__':
             agent.buffer.states.append(state)
             agent.buffer.actions.append(action)
             agent.buffer.rewards.append(reward)
-            agent.buffer.next_states.append(next_state)
-            agent.buffer.masks.append(1-int(done))
             state = next_state
             episode_reward += reward
         episode_reward_history.append(episode_reward)
         agent.train()
         if episode % args.test_episode_interval == 0:
             print(f'| Episode: {episode:3} | Episode Reward: {episode_reward:5.1f} |')
-    filename = 'CartPole-v1.png'
+    filename = 'AC 321 - CartPole-v1.png'
     plotLearning(episode_reward_history, filename=filename, window=25)

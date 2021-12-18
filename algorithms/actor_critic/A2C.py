@@ -6,7 +6,7 @@ import torch.distributions as distributions
 
 """
 Advantage Actor Critic (A2C)
-baselined version
+baseline version
 """
 
 

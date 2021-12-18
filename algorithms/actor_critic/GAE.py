@@ -7,6 +7,8 @@ import torch.distributions as distributions
 """
 John Schulman, Philipp Moritz, Sergey Levine, Michael I. Jordan, Pieter Abbeel:
 High-Dimensional Continuous Control Using Generalized Advantage Estimation. ICLR (Poster) 2016
+
+Generalized Advantage Estimation (GAE)
 """
 
 
