@@ -1,3 +1,3 @@
 git add .
-git commit -m 'fixed push ssl'
+git commit -m 'update readme'
 git push origin master
