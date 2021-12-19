@@ -1,3 +1,3 @@
 git add .
-git commit -m 'push proxy socket'
+git commit -m 'push proxy test'
 git push origin master
