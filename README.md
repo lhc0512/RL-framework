@@ -34,7 +34,7 @@ Trade-off between performance and readability.
 
 ### Value Based
 
-- Deep Q Network (DQN)
+- [Deep Q Network (DQN)](https://www.nature.com/articles/nature14236)
 - [Double Deep Q Network (DoubleDQN)](https://arxiv.org/abs/1509.06461)
 - [Dueling Double Deep Q Network (DuelingDoubleDQN)](https://arxiv.org/abs/1511.06581)
 
