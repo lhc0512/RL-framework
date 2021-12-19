@@ -1,3 +1,3 @@
 git add .
-git commit -m 'push error '
+git commit -m 'push test '
 git push origin master
