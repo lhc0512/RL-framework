@@ -1,3 +1,3 @@
 git add .
-git commit -m 'ignore'
+git commit -m 'fix proxy error'
 git push origin master
