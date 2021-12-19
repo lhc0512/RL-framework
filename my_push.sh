@@ -1,3 +1,3 @@
 git add .
-git commit -m 'push proxy test'
+git commit -m 'fixed push ssl'
 git push origin master
