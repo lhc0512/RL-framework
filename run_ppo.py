@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.actor_critic.PPO import ActorCriticAgent
+from algorithms.actor_critic.ppo import ActorCriticAgent
 import os
 import yaml
 from types import SimpleNamespace as SN

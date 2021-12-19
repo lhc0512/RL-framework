@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.value_based.DoubleDQN import Agent
+from algorithms.value_based.double_dqn import Agent
 from commons.utils import plot_figure
 import os
 import yaml

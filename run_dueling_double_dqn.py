@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.value_based.DuelingDoubleDQN import DuelingDoubleDQNAgent
+from algorithms.value_based.dueling_double_dqn import DuelingDoubleDQNAgent
 from commons.utils import plot_figure
 import os
 import yaml

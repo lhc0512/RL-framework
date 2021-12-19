@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.actor_critic.A2C import ActorCriticAgent
+from algorithms.actor_critic.a2c import ActorCriticAgent
 from commons.utils import plotLearning
 import os
 import yaml

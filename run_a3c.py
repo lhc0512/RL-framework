@@ -4,7 +4,7 @@ from types import SimpleNamespace as SN
 import gym
 import yaml
 
-from algorithms.actor_critic.A3C import MasterAgent
+from algorithms.actor_critic.a3c import MasterAgent
 
 with open(os.path.join(os.path.dirname(__file__), "config", "actor_critic", "A3C.yaml"), "r") as f:
     try:
