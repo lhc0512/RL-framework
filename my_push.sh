@@ -1,3 +1,3 @@
 git add .
-git commit -m 'fix merge'
+git commit -m 'add '
 git push origin master
