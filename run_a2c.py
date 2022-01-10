@@ -3,13 +3,13 @@ import numpy as np
 import torch
 
 from algorithms.actor_critic.a2c import ActorCriticAgent
-from commons.utils import plotLearning
+from commons.utils import plot_figure
 import os
 import yaml
 from types import SimpleNamespace as SN
 
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__), "../", "config", "A2C.yaml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "configs", "actor_critic", "a2c.yaml"), "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:
@@ -46,4 +46,4 @@ if __name__ == '__main__':
         if episode % args.test_episode_interval == 0:
             print(f'| Episode: {episode:3} | Episode Reward: {episode_reward:5.1f} |')
     filename = 'A2C- CartPole-v1.png'
-    plotLearning(episode_reward_history, filename=filename, window=25)
+    plot_figure(episode_reward_history, "Episode", "Reward", filename)

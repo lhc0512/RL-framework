@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 
 
-def plot_figure(rewards, label, filename):
+def plot_figure(data, xlabel, ylabel, filename):
     plt.figure()
     plt.ylim([0, 105])
     plt.cla()
-    plt.plot(range(len(rewards)), rewards)
-    plt.xlabel("episode")
-    plt.ylabel(label)
-    plt.savefig(f"{filename}.png", format="png")
+    plt.plot(range(len(data)), data)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig(f"{filename}", format="png")
     plt.close()

@@ -9,7 +9,7 @@ import yaml
 from types import SimpleNamespace as SN
 from datetime import datetime
 
-with open(os.path.join(os.path.dirname(__file__), "config", 'value_based', "DoubleDQN.yaml"), "r") as f:
+with open(os.path.join(os.path.dirname(__file__), "configs", 'value_based', "double_dqn.yaml"), "r") as f:
     try:
         config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except yaml.YAMLError as exc:

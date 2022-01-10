@@ -119,6 +119,39 @@ def test_001():
     print('b = ', b)
 
 
+def test_gpa_1():
+    point = [2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1]
+    score = [88, 93, 85, 85, 74, 75, 81, 80, 84, 81, 87, 93, 88, 91]
+    score_point = 0
+    for p, s in zip(point, score):
+        score_point += p * s
+    weight_score = score_point / sum(point)
+    gpa = weight_score / 100 * 4
+    print(gpa)
+
+
+def test_gpa_2():
+    lianghao = 87
+    point = [3, 2, 4, 3, 3, 3, 1, 5, 3,
+             4, 3, 3, 1, 5, 1, 1, 6, 1, 5,
+             2, 5, 2, 4, 4, 1, 2, 1, 2,
+             3, 1, 2, 2, 1, 2, 4, 3, 2.5, 4, 1, 2.5,
+             2, 3, 2, 3, 2.5, 2, 0.5, 2, 4, 3, 3,
+             3, 3, 2, 2.5, 4, 3, 1.5, 1, 2, 2, 1]
+    score = [68, 92, 75, 77, lianghao, 83, 91, 90, 78,
+             81, 89, 87, 87, 89, lianghao, 73, 76, 77, 93,
+             90, 62.5, 95, 85, 81, lianghao, 90, 79, 80,
+             85, 62, 83, 62, 82, 90, lianghao, 79, 80, 70, 75, 93,
+             lianghao, 74, 61, 88, 67, 85, 84, 82, 85, 78, 73,
+             81, 77, lianghao, 88, 80, 89, 84, lianghao, lianghao, 87, 86]
+    score_point = 0
+    for p, s in zip(point, score):
+        score_point += p * s
+    weight_score = score_point / sum(point)
+    gpa = weight_score / 100 * 4
+    print(gpa)
+
+
 if __name__ == '__main__':
     # test_001()
-    test_001()
+    test_gpa_2()

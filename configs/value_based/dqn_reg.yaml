@@ -1,0 +1,32 @@
+# environment
+env_name: 'CartPole-v1'
+##env_name: 'LunarLander-v2'
+#max_episode_steps: 400
+#state_dim: None
+#action_dim: None
+
+
+name: 'DQN_Reg'
+
+lr: 0.001
+gamma: 0.99
+tau: 0.005
+hidden_dim: 64
+# experience replay
+buffer_size: 100000
+batch_size: 512
+
+# epsilon
+epsilon: 1.0
+epsilon_decay: 0.001
+epsilon_mini: 0.01
+
+# log
+seed: 123
+
+total_steps: 100000
+save_steps: 100000
+test_steps: 5000
+test_num: 4
+
+checkpoint_path: './model'

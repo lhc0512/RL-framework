@@ -2,14 +2,14 @@ import gym
 import numpy as np
 import torch
 
-from algorithms.GAE import ActorCriticAgent
-from utils import plotLearning
+from algorithms.actor_critic.gae import ActorCriticAgent
+from commons.utils import plot_figure
 import os
 import yaml
 from types import SimpleNamespace as SN
 
 if __name__ == '__main__':
-    with open(os.path.join(os.path.dirname(__file__), "../", "config", "GAE.yaml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "configs", "actor_critic", "gae.yaml"), "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:
@@ -46,4 +46,4 @@ if __name__ == '__main__':
         if episode % args.test_episode_interval == 0:
             print(f'| Episode: {episode:3} | Episode Reward: {episode_reward:5.1f} |')
     filename = 'GAE CartPole-v1.png'
-    plotLearning(episode_reward_history, filename=filename, window=25)
+    plot_figure(episode_reward_history, "Episode", "Reward", filename)

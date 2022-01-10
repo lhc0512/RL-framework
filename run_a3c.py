@@ -6,7 +6,7 @@ import yaml
 
 from algorithms.actor_critic.a3c import MasterAgent
 
-with open(os.path.join(os.path.dirname(__file__), "config", "actor_critic", "A3C.yaml"), "r") as f:
+with open(os.path.join(os.path.dirname(__file__), "configs", "actor_critic", "A3C.yaml"), "r") as f:
     try:
         config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except yaml.YAMLError as exc:

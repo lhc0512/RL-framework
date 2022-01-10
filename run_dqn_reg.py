@@ -1,15 +1,18 @@
+"""
+todo no completed
+"""
 import gym
 import numpy as np
 import torch
 
-from algorithms.value_based.dueling_double_dqn import DuelingDoubleDQNAgent
+from algorithms.value_based.dqn_reg import DQNRegAgent
 from commons.utils import plot_figure
 import os
 import yaml
 from types import SimpleNamespace as SN
 from datetime import datetime
 
-with open(os.path.join(os.path.dirname(__file__), "configs", 'value_based', "dueling_double_dqn.yaml"), "r") as f:
+with open(os.path.join(os.path.dirname(__file__), "configs", 'value_based', "dqn_reg.yaml"), "r") as f:
     try:
         config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except yaml.YAMLError as exc:
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     args.state_dim = train_env.observation_space.shape[0]
     args.action_dim = train_env.action_space.n
 
-    agent = DuelingDoubleDQNAgent(args)
+    agent = DQNRegAgent(args)
     episode_reward_history = []
     current_steps = 0
 

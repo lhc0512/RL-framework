@@ -9,7 +9,7 @@ from types import SimpleNamespace as SN
 from datetime import datetime
 from commons.utils import plot_figure
 
-with open(os.path.join(os.path.dirname(__file__), "config", "PPO.yaml"), "r") as f:
+with open(os.path.join(os.path.dirname(__file__), "configs", "actor_critic", "PPO.yaml"), "r") as f:
     try:
         config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except yaml.YAMLError as exc:
@@ -72,4 +72,4 @@ if __name__ == '__main__':
                 agent.save(f'{args.checkpoint_path}/{args.seed}-{args.name}-{current_steps}')
 
     file_name = f'{args.seed}-{args.name}-{args.env_name}-{datetime.now()}.png'
-    plot_figure(episode_reward_history, "reward", file_name)
+    plot_figure(episode_reward_history, "Episode", "Reward", file_name)
